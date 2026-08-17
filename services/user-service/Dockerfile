@@ -6,7 +6,8 @@
 #               框架基础镜像仅含 min-monolith + migrate extras（见框架 Dockerfile），故本镜像
 #               build 阶段安装 flower-web-infrastructure[min-microservice,migrate] 后仅拷贝 site-packages
 #               到 runtime 阶段（安全整改：非 root + 清理构建期工具，与框架 Dockerfile 一致）。
-#               构建前置：可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
+#               构建前置：build 阶段安装 git（pip 以 git+https 拉取框架源码需要）
+#               + 可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
 # =====================================================================
 FROM python:3.11-slim AS build
 
@@ -15,6 +16,11 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /build
+
+# 安装 git（pip 以 git+https 拉取框架源码需要，python:3.11-slim 基础镜像不含 git）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
     pip install "flower-web-infrastructure[min-microservice,migrate] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git" && \

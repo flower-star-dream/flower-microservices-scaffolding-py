@@ -5,7 +5,8 @@
 # @Description: 与 user/order-service 同构：微服务形态需要 nacos SDK，框架基础镜像仅含
 #               min-monolith + migrate extras，故 build 阶段安装
 #               flower-web-infrastructure[min-microservice,migrate] 后仅拷贝 site-packages 到 runtime。
-#               构建前置：可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
+#               构建前置：build 阶段安装 git（pip 以 git+https 拉取框架源码需要）
+#               + 可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
 # =====================================================================
 FROM python:3.11-slim AS build
 
@@ -14,6 +15,11 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /build
+
+# 安装 git（pip 以 git+https 拉取框架源码需要，python:3.11-slim 基础镜像不含 git）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
     pip install "flower-web-infrastructure[min-microservice,migrate] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git" && \
