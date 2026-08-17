@@ -204,7 +204,7 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     new_cmd.add_argument(
         "--components",
         help="组件与实现选择（逗号分隔 name:impl，如 cache:redis,mq:rocketmq；"
-        "all=全部默认 / none=仅必选组件；缺省时交互式逐个询问，非交互环境默认全部默认值）。"
+        "all=全部默认 / none=仅必选组件；缺省时交互式逐个询问，非交互环境默认最小化（仅必选与形态默认组件，其余按需显式指定））。"
         f"可用组件：{'、'.join(COMPONENTS)}；注册中心强制 Nacos、禁止内存实现",
     )
     new_cmd.add_argument(

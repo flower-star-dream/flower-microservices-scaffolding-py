@@ -551,20 +551,26 @@ class TestMicroComponents:
         assert "cache:" not in updated
 
     def test_render_capabilities(self):
-        """能力装配清单：微服务默认（registry=nacos、cache=redis）映射全部启用组件能力。"""
+        """能力装配清单：默认最小化（必选 db + 形态覆盖 registry/cache），显式选择后能力收敛。"""
+        # 非交互默认最小化：仅 db/cache/registry（cache/registry 为微服务形态默认）
         comps = np.resolve_components(None, defaults={"registry": "nacos", "cache": "redis"})
-        assert np.render_capabilities(comps) == ["db", "cache", "storage", "mq", "registry", "pay", "authn"]
+        assert np.render_capabilities(comps) == ["db", "cache", "registry"]
+        # 显式选择支付等业务组件后能力追加（未提及组件默认 off，不再全量给出）
+        comps = np.resolve_components(
+            "payment:wechat,mq:rocketmq", defaults={"registry": "nacos", "cache": "redis"}
+        )
+        assert np.render_capabilities(comps) == ["db", "cache", "mq", "registry", "pay"]
         # 显式关闭业务组件后能力收敛
         comps = np.resolve_components("payment:off,jwt:off,social:off,security:off", defaults={"registry": "nacos", "cache": "redis"})
         assert "pay" not in np.render_capabilities(comps)
         assert "authn" not in np.render_capabilities(comps)
 
     def test_apply_capabilities_to_text(self):
-        """能力装配段渲染：服务模板 enabled: [] 替换为项目能力清单。"""
+        """能力装配段渲染：服务模板 enabled: [] 替换为项目能力清单（按最小化默认 + 显式选择）。"""
         text = "app:\n  capabilities:\n    enabled: []\n  cache:\n    type: redis\n"
         comps = np.resolve_components("payment:wechat", defaults={"registry": "nacos", "cache": "redis"})
         updated = np.apply_capabilities_to_text(text, comps)
-        assert 'enabled: ["db", "cache", "storage", "mq", "registry", "pay", "authn"]' in updated
+        assert 'enabled: ["db", "cache", "registry", "pay"]' in updated
 
     def test_generate_spi_skeleton_host_service(self, mini_repo: Path, monkeypatch, tmp_path: Path):
         """new --components=cache:custom,mq:custom：骨架生成到宿主服务（cache->user-service / mq->order-service）。"""

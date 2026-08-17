@@ -845,6 +845,24 @@ def _default_impl(name: str, spec: dict, defaults: Optional[Dict[str, str]] = No
     return spec.get("default", "off")
 
 
+def _minimal_impl(name: str, spec: dict, defaults: Optional[Dict[str, str]] = None) -> str:
+    """返回最小化默认实现 id：必选组件（off=False）与脚手架形态覆盖组件（defaults）取默认，其余可选组件一律 off。
+
+    用途：--components 显式列表未提及的组件 / 非交互默认 / 交互询问默认。保证生成项目只保留
+    显式选择 + 必选 + 形态覆盖的组件配置，未选组件整块裁剪（避免默认启用过多组件导致配置全量给出）。
+
+    Args:
+        name: 组件名。
+        spec: 组件定义。
+        defaults: 脚手架形态默认覆盖（如微服务 {"registry": "nacos", "cache": "redis"}）。
+    """
+    if not spec.get("off"):
+        return _default_impl(name, spec, defaults)
+    if defaults and name in defaults:
+        return defaults[name]
+    return "off"
+
+
 def _option_ids(spec: dict) -> List[str]:
     """返回组件可选实现 id 列表（含 off）。"""
     ids = [opt["id"] for opt in spec["options"]]
@@ -889,10 +907,10 @@ def parse_components(value: str, *, defaults: Optional[Dict[str, str]] = None) -
         if impl not in _option_ids(spec):
             sys.exit(f"组件 {name} 不支持实现 {impl!r}（可选：{'、'.join(_option_ids(spec))}）")
         result[name] = impl
-    # 未显式指定的组件取默认
+    # 未显式指定的组件取最小化默认：必选 + 形态覆盖组件保留，其余可选组件 off（按需显式启用）
     for name, spec in COMPONENTS.items():
         if name not in result:
-            result[name] = _default_impl(name, spec, defaults)
+            result[name] = _minimal_impl(name, spec, defaults)
     _validate_components(result)
     return result
 
@@ -919,7 +937,7 @@ def prompt_components(*, defaults: Optional[Dict[str, str]] = None) -> Dict[str,
         options = list(spec["options"])
         if spec.get("off"):
             options.insert(0, {"id": "off", "label": "不使用"})
-        default = _default_impl(name, spec, defaults)
+        default = _minimal_impl(name, spec, defaults)
         hint = f"（{spec['hint']}）" if spec.get("hint") else ""
         print(f"\n[{spec['label']}]{hint}（{spec['group']}）")
         for idx, opt in enumerate(options):
@@ -956,7 +974,8 @@ def resolve_components(value: Optional[str], *, defaults: Optional[Dict[str, str
         return parse_components(value, defaults=defaults)
     if sys.stdin.isatty():
         return prompt_components(defaults=defaults)
-    return {name: _default_impl(name, spec, defaults) for name, spec in COMPONENTS.items()}
+    # 非交互默认（CI / 脚本）：最小化——仅必选 + 形态覆盖组件，其余可选组件 off（按需显式指定）
+    return {name: _minimal_impl(name, spec, defaults) for name, spec in COMPONENTS.items()}
 
 
 def _print_selection(selected: Dict[str, str]) -> None:

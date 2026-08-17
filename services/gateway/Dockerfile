@@ -7,6 +7,8 @@
 #               flower-web-infrastructure[min-microservice,migrate] 后仅拷贝 site-packages 到 runtime。
 #               构建前置：build 阶段安装 git（pip 以 git+https 拉取框架源码需要）
 #               + 可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
+#               2026-08-17 整改（Trivy 高危阻断）：runtime apt upgrade 修复基础镜像 util-linux 家族
+#               CVE-2026-53615；build 覆盖升级 cryptography>=50.0.0 修复 CVE-2026-69247/CVE-2026-69249。
 # =====================================================================
 FROM python:3.11-slim AS build
 
@@ -23,6 +25,9 @@ RUN apt-get update && \
 
 RUN pip install --upgrade pip && \
     pip install "flower-web-infrastructure[min-microservice,migrate] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git" && \
+    # 覆盖升级 cryptography（Trivy 高危修复）：nacos 传递依赖 alibabacloud-tea-openapi 将 cryptography
+    # 上限锁在 <49（48.0.1 命中 CVE-2026-69247/CVE-2026-69249，修复版 50.0.0），框架核心无上限故安装后显式升级
+    pip install --upgrade "cryptography>=50.0.0" && \
     # 清理构建期工具（Trivy 高危/严重阻断修复，与框架 Dockerfile 一致）
     pip uninstall -y setuptools wheel pip && \
     rm -rf /usr/local/lib/python3.11/site-packages/pip \
@@ -46,8 +51,11 @@ COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3
 COPY src ./src
 COPY application.yml ./application.yml
 
-# 清理基础镜像自带构建期工具 + 非 root 运行（安全基线）
-RUN rm -rf /usr/local/lib/python3.11/site-packages/pip \
+# 升级系统包修复基础镜像漏洞（util-linux 家族 CVE-2026-53615）+ 清理构建期工具 + 非 root 运行（安全基线）
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/lib/python3.11/site-packages/pip \
            /usr/local/lib/python3.11/site-packages/pip-*.dist-info \
            /usr/local/lib/python3.11/site-packages/setuptools \
            /usr/local/lib/python3.11/site-packages/setuptools-*.dist-info \
