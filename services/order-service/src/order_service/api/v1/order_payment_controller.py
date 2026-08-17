@@ -43,8 +43,14 @@ def get_payment_gateway(request: Request) -> InMemoryPaymentGateway:
 
     :param request: FastAPI 请求（携带 app.state 已装配组件）
     :return: 已注册的内存支付渠道（骨架实现）
+    :raises RuntimeError: 未注册内存渠道（生产切换真实渠道后需替换本依赖）
     """
-    return PaymentGatewayRegistry.get("memory")
+    gateway = PaymentGatewayRegistry.get("memory")
+    if not isinstance(gateway, InMemoryPaymentGateway):
+        raise RuntimeError(
+            "支付渠道未装配为内存渠道：请检查 main.py 中 PaymentGatewayRegistry.register(\"memory\", ...)"
+        )
+    return gateway
 
 
 def get_payment_dispatcher(request: Request) -> PaymentCallbackDispatcher:
