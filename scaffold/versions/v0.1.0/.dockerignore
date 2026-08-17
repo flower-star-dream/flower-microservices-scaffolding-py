@@ -1,0 +1,31 @@
+# 运行时数据与本地文件
+data/
+*.db
+*.sqlite3
+
+# 虚拟环境
+.venv/
+venv/
+
+# 测试与缓存
+.pytest_cache/
+.coverage
+__pycache__/
+*.pyc
+
+# 构建产物
+build/
+dist/
+*.egg-info/
+
+# 环境文件
+.env
+
+# Docker 数据卷
+minio_data/
+
+# 脚手架脚本与文档（镜像仅需要各服务自身 src 与 application.yml）
+scripts/
+docs/
+db/
+docker-compose.yml

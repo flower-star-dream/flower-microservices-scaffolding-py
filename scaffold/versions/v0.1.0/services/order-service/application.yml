@@ -1,0 +1,75 @@
+# =====================================================================
+# order-service 应用配置（服务目录）
+# @Author: 花海
+# @Date: 2026/08/16
+# @Description: 微服务形态配置：Nacos 注册发现 + MySQL 分库（flower_order）+ 消息队列（默认内存，
+#               生产切 rocketmq）+ 本地存储。创建订单时经 FeignClient 发现并调用 user-service 校验用户。
+#               配置优先级：环境变量 > 仓库根 .env > application.yml > 框架默认 application.default.yml。
+# =====================================================================
+app:
+  name: order-service
+  env: dev
+  version: 0.1.0
+  logging:
+    level: INFO
+    format: text
+
+  web:
+    middlewares:
+      security_headers:
+        enabled: true            # 安全响应头（推荐启用）
+      auth:
+        enabled: false           # 统一鉴权中间件，需使用时改为 true 并配置签发密钥 JWT_SECRET_KEY
+        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/docs", "/redoc", "/openapi.json"]
+      trace_id: {}
+
+  # 缓存：memory（本服务订单详情缓存可选；接入 Redis 改 redis 并配置 app.cache.redis）
+  cache:
+    type: memory
+    max_size: 10000
+
+  # 数据库：服务分库（flower_order），连接参数全部经 ${ENV:default} 占位符外置
+  db:
+    type: mysql
+    mysql:
+      host: ${APP_DB_MYSQL_HOST:127.0.0.1}
+      port: ${APP_DB_MYSQL_PORT:3306}
+      database: ${APP_DB_ORDER_MYSQL_DATABASE:flower_order}
+      username: ${APP_DB_MYSQL_USERNAME:root}
+      password: ${APP_DB_MYSQL_PASSWORD:}
+      charset: utf8mb4
+      use_ssl: false             # 本地开发默认关闭 SSL（无证书）；生产环境开启
+      pool_size: 8
+      max_overflow: 8
+
+  # 对象存储：本服务未使用，保持本地默认
+  storage:
+    type: local
+    base_dir: ./data
+
+  # 消息队列：memory（本地/测试，进程内队列 + 幂等消费演示）；生产切 rocketmq（docker-compose 提供）
+  mq:
+    type: memory
+    # rocketmq:
+    #   name_server: ${APP_MQ_ROCKETMQ_NAMESERVER:127.0.0.1:9876}
+    #   group_name: order-producer-group
+
+  # 服务间远程调用 FeignClient 装配参数（规范 §7 远程调用韧性：超时/重试/退避/熔断，
+  # 由框架 build_feign_client 读取装配；circuit_breaker 段缺失时不启用熔断）
+  feign:
+    timeout: 10.0
+    retries: 2
+    retry_delay_base: 0.5
+    retry_delay_max: 4.0
+    circuit_breaker:
+      minimum_number_of_calls: 5
+      window_size: 10
+      wait_duration_in_open_state: 30.0
+
+  # 服务注册发现：nacos（docker-compose 提供；本地无 Nacos 可切 memory）
+  registry:
+    type: nacos
+    nacos:
+      server_addresses: ${APP_REGISTRY_NACOS_SERVER:127.0.0.1:8848}
+      namespace: ${APP_REGISTRY_NACOS_NAMESPACE:public}
+      group: ${APP_REGISTRY_NACOS_GROUP:DEFAULT_GROUP}

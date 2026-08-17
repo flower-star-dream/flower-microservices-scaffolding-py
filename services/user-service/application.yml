@@ -1,0 +1,86 @@
+# =====================================================================
+# user-service 应用配置（服务目录，启动/迁移命令在仓库根执行时经 -c 指定本文件）
+# @Author: 花海
+# @Date: 2026/08/16
+# @Description: 微服务形态配置：Nacos 注册发现 + Redis 缓存 + MySQL 分库（flower_user）。
+#               配置优先级：环境变量 > 仓库根 .env > application.yml > 框架默认 application.default.yml。
+#               数据库/缓存/Nacos 连接参数全部经 ${ENV:default} 占位符外置（敏感值写入仓库根 .env）。
+#               生产环境：设置 APP_ENV=prod，并按需切换存储 / MQ（本服务默认内存实现）。
+# =====================================================================
+app:
+  name: user-service
+  env: dev
+  version: 0.1.0
+  logging:
+    level: INFO
+    format: text
+
+  # 能力依赖装配（框架 2026-08-17）：enabled 声明启用的可选能力，装配时按包含关系校验并
+  # 自动导入对应框架模块（如 "authn" 自动带上前置 "user"；"pay" 自动带上 authz/authn/user）。
+  # 由脚手架组件选择生成（JWT/三方登录/安全组件 -> "authn"）；默认不启用任何可选能力。
+  capabilities:
+    enabled: []
+
+  web:
+    # 中间件声明式引入：列出即引入，enabled: false 显式关闭；
+    # trace_id 必须最后声明（最先执行生成 TraceId，避免覆盖内层鉴权注入的身份）
+    middlewares:
+      security_headers:
+        enabled: true            # 安全响应头（推荐启用）
+      auth:
+        enabled: false           # 统一鉴权中间件，需使用时改为 true 并配置签发密钥 JWT_SECRET_KEY
+        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/docs", "/redoc", "/openapi.json"]
+      trace_id: {}
+
+  # <<<MODULE:jwt_spi>>>
+  # JWT SPI 装配说明（规范 §6.1/§6.2）：签名密钥/算法回落 EnvJwtKeyProvider（读取环境变量
+  # JWT_SECRET_KEY，派生出 access/refresh 两段密钥，见 .env.example）；Token 状态存储默认
+  # 内存实现（单机演示），生产多实例切换 RedisJwtTokenStore（见 main.py 装配注释）。
+  # <<</MODULE:jwt_spi>>>
+  # <<<MODULE:social_login>>>
+  # 三方登录装配说明（规范 §6.8）：默认注册 Demo 平台（不触网，授权码 demo-xxx 有效）+ 内存绑定存储；
+  # 生产实现真实平台 SPI（微信/GitHub 等）后注册进 SocialPlatformRegistry，绑定存储可换 Redis/DB。
+  # <<</MODULE:social_login>>>
+
+  # <<<COMPONENT:cache>>>
+  # 缓存：redis（微服务形态，docker-compose 提供；本地无 Redis 可切 memory）
+  cache:
+    type: redis
+    redis:
+      host: ${APP_CACHE_REDIS_HOST:127.0.0.1}
+      port: ${APP_CACHE_REDIS_PORT:6379}
+      db: ${APP_CACHE_REDIS_DB:0}
+  # <<</COMPONENT:cache>>>
+
+  # <<<COMPONENT:db>>>
+  # 数据库：服务分库（flower_user），连接参数全部经 ${ENV:default} 占位符外置
+  db:
+    type: mysql
+    mysql:
+      host: ${APP_DB_MYSQL_HOST:127.0.0.1}
+      port: ${APP_DB_MYSQL_PORT:3306}
+      database: ${APP_DB_USER_MYSQL_DATABASE:flower_user}
+      username: ${APP_DB_MYSQL_USERNAME:root}
+      password: ${APP_DB_MYSQL_PASSWORD:}
+      charset: utf8mb4
+      use_ssl: false             # 本地开发默认关闭 SSL（无证书）；生产环境开启
+      pool_size: 8
+      max_overflow: 8
+  # <<</COMPONENT:db>>>
+
+  # 对象存储 / 消息队列：本服务未使用，保持默认内存/本地实现
+  storage:
+    type: local
+    base_dir: ./data
+  mq:
+    type: memory
+
+  # <<<COMPONENT:registry>>>
+  # 服务注册发现：nacos（微服务强制启用，禁止内存实现；docker-compose 提供）
+  registry:
+    type: nacos
+    nacos:
+      server_addresses: ${APP_REGISTRY_NACOS_SERVER:127.0.0.1:8848}
+      namespace: ${APP_REGISTRY_NACOS_NAMESPACE:public}
+      group: ${APP_REGISTRY_NACOS_GROUP:DEFAULT_GROUP}
+  # <<</COMPONENT:registry>>>

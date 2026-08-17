@@ -1,0 +1,64 @@
+# =====================================================================
+# gateway 应用配置（服务目录）
+# @Author: 花海
+# @Date: 2026/08/16
+# @Description: 微服务网关：无业务库/缓存/存储依赖（保持无状态），仅依赖注册中心（Nacos/内存）。
+#               /api/{service_key}/{path:path} 按路由表（app.gateway.routes）经 FeignClient
+#               发现并转发到下游服务（user-service / order-service）。
+# =====================================================================
+app:
+  name: gateway
+  env: dev
+  version: 0.1.0
+  logging:
+    level: INFO
+    format: text
+
+  web:
+    middlewares:
+      security_headers:
+        enabled: true            # 安全响应头（推荐启用）
+      trace_id: {}
+
+  # 网关无业务数据：db/缓存/存储/MQ 保持最轻默认（不依赖外部服务）
+  cache:
+    type: memory
+  db:
+    type: sqlite
+    sqlite:
+      path: ":memory:"
+  storage:
+    type: local
+    base_dir: ./data
+  mq:
+    type: memory
+
+  # 服务注册发现：nacos（docker-compose 提供；本地无 Nacos 可切 memory）
+  registry:
+    type: nacos
+    nacos:
+      server_addresses: ${APP_REGISTRY_NACOS_SERVER:127.0.0.1:8848}
+      namespace: ${APP_REGISTRY_NACOS_NAMESPACE:public}
+      group: ${APP_REGISTRY_NACOS_GROUP:DEFAULT_GROUP}
+
+  # 网关路由转发 FeignClient 装配参数（规范 §7 远程调用韧性：超时/重试/退避/熔断，
+  # 由框架 build_feign_client 读取装配；circuit_breaker 段缺失时不启用熔断）
+  feign:
+    timeout: 10.0
+    retries: 2
+    retry_delay_base: 0.5
+    retry_delay_max: 4.0
+    circuit_breaker:
+      minimum_number_of_calls: 5
+      window_size: 10
+      wait_duration_in_open_state: 30.0
+
+  # 网关路由表（/api/{key}/{path} -> 下游服务；可在此增改路由，缺省回落代码内置 DEFAULT_ROUTES）
+  gateway:
+    routes:
+      users:
+        service: user-service
+        prefix: /v1/users
+      orders:
+        service: order-service
+        prefix: /v1/orders

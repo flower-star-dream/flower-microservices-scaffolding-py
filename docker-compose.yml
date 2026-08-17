@@ -1,0 +1,94 @@
+# =====================================================================
+# flower-microservices-scaffolding 本地外部依赖编排（docker-compose）
+# @Author: 花海
+# @Date: 2026/08/16
+# @Description: 一键拉起微服务脚手架本地开发所需外部服务：
+#               MySQL（user/order 分库，db/init 基线 SQL 自动初始化）
+#               + Redis（缓存）+ Nacos（注册中心）+ RocketMQ（消息队列）+ MinIO（对象存储）。
+#               启动：docker compose up -d；停止：docker compose down。
+#               生产环境不依赖本文件（外部服务由运维提供，应用通过 .env 环境变量接入）。
+# =====================================================================
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: flower-micro-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flower_user
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      # 基线 SQL（ddl/dml 子目录 + init 脚本）在容器首次初始化时执行
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: flower-micro-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  nacos:
+    # 注册中心（standalone 单机模式；9848 为 gRPC 端口，SDK v2 必需）
+    image: nacos/nacos-server:v2.3.2
+    container_name: flower-micro-nacos
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    restart: unless-stopped
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.0
+    container_name: flower-micro-rocketmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.0
+    container_name: flower-micro-rocketmq-broker
+    command: sh mqbroker -n rocketmq-namesrv:9876 --enable-proxy
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10911:10911"
+      - "8081:8081"
+
+  minio:
+    image: minio/minio:latest
+    container_name: flower-micro-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  minio_data:

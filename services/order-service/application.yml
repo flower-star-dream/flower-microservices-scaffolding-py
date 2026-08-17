@@ -1,0 +1,134 @@
+# =====================================================================
+# order-service 应用配置（服务目录）
+# @Author: 花海
+# @Date: 2026/08/16
+# @Description: 微服务形态配置：Nacos 注册发现 + MySQL 分库（flower_order）+ 消息队列（默认内存，
+#               生产切 rocketmq）+ 本地存储。创建订单时经 FeignClient 发现并调用 user-service 校验用户。
+#               配置优先级：环境变量 > 仓库根 .env > application.yml > 框架默认 application.default.yml。
+# =====================================================================
+app:
+  name: order-service
+  env: dev
+  version: 0.1.0
+  logging:
+    level: INFO
+    format: text
+
+  # 能力依赖装配（框架 2026-08-17）：enabled 声明启用的可选能力，装配时按包含关系校验并
+  # 自动导入对应框架模块（如 "pay" 自动带上前置 authz/authn/user）。
+  # 由脚手架组件选择生成（支付 -> "pay"、消息队列 -> "mq" 等）；默认不启用任何可选能力。
+  capabilities:
+    enabled: []
+
+  web:
+    middlewares:
+      security_headers:
+        enabled: true            # 安全响应头（推荐启用）
+      auth:
+        enabled: false           # 统一鉴权中间件，需使用时改为 true 并配置签发密钥 JWT_SECRET_KEY
+        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/docs", "/redoc", "/openapi.json"]
+      idempotency:               # API 幂等键中间件（订单创建防重复下单，规范 §12.6）
+        ttl_seconds: 86400       #   幂等结果保留 24h（覆盖重试窗口）；多实例需配 Redis 共享存储
+      trace_id: {}
+
+  # <<<COMPONENT:cache>>>
+  # 缓存：memory（本服务订单详情缓存可选；接入 Redis 改 redis 并配置 app.cache.redis）
+  cache:
+    type: memory
+    max_size: 10000
+  # <<</COMPONENT:cache>>>
+
+  # <<<COMPONENT:db>>>
+  # 数据库：服务分库（flower_order），连接参数全部经 ${ENV:default} 占位符外置
+  db:
+    type: mysql
+    mysql:
+      host: ${APP_DB_MYSQL_HOST:127.0.0.1}
+      port: ${APP_DB_MYSQL_PORT:3306}
+      database: ${APP_DB_ORDER_MYSQL_DATABASE:flower_order}
+      username: ${APP_DB_MYSQL_USERNAME:root}
+      password: ${APP_DB_MYSQL_PASSWORD:}
+      charset: utf8mb4
+      use_ssl: false             # 本地开发默认关闭 SSL（无证书）；生产环境开启
+      pool_size: 8
+      max_overflow: 8
+  # <<</COMPONENT:db>>>
+
+  # <<<COMPONENT:storage>>>
+  # 对象存储：local（本地磁盘）；生产切 minio（docker-compose 提供）
+  storage:
+    type: local
+    base_dir: ./data
+    minio:
+      endpoint: ${APP_STORAGE_MINIO_ENDPOINT:localhost:9000}
+      access_key: ${APP_STORAGE_MINIO_ACCESS_KEY:}
+      secret_key: ${APP_STORAGE_MINIO_SECRET_KEY:}
+      secure: false
+      default_bucket: default
+      presign_expires: 600
+  # <<</COMPONENT:storage>>>
+
+  # <<<COMPONENT:mq>>>
+  # 消息队列：memory（本地/测试，进程内队列 + 幂等消费演示）；生产切 rocketmq（docker-compose 提供）
+  mq:
+    type: memory
+    rocketmq:
+      name_server: ${APP_MQ_ROCKETMQ_NAMESERVER:127.0.0.1:9876}
+      group_name: order-producer-group
+    # Outbox 可靠投递（规范 §21.3）：订单事件先入 message_outbox（与订单落库同事务），
+    # 由定时任务轮询投递 MQ——投递失败指数退避重试、超限进死信（S9-4/P0-3），不丢事件
+    outbox:
+      enabled: true
+      max_retry: 3
+      retry_backoff_seconds: 30
+      dead_letter_topic: web-dlq-topic
+      publish_interval_seconds: 5
+      cleanup_interval_seconds: 3600
+      retain_days: 7
+  # <<</COMPONENT:mq>>>
+
+  # <<<MODULE:payment>>>
+  # 支付配置（app.payment）：默认内存渠道（演示，本地可直测：下单→回调→订单状态机 PAY）；
+  # 生产切 wechat 并配置商户参数（敏感值经 .env 的 APP_PAYMENT_* 注入）
+  payment:
+    type: memory            # 默认渠道：memory（内存测试实现）| wechat
+    wechat:
+      appid: ${APP_PAYMENT_WECHAT_APPID:}
+      mchid: ${APP_PAYMENT_WECHAT_MCHID:}
+      mch_serial_no: ${APP_PAYMENT_WECHAT_MCH_SERIAL_NO:}
+      api_v3_key: ${APP_PAYMENT_WECHAT_API_V3_KEY:}
+      private_key: ${APP_PAYMENT_WECHAT_PRIVATE_KEY:}
+      private_key_path: ${APP_PAYMENT_WECHAT_PRIVATE_KEY_PATH:}
+      notify_url: ${APP_PAYMENT_WECHAT_NOTIFY_URL:}
+      refund_notify_url: ${APP_PAYMENT_WECHAT_REFUND_NOTIFY_URL:}
+      verify_mode: platform_cert
+      platform_cert_dir: ./cert
+      # 平台证书自动下载：验签遇未知序列号自动调用 /v3/certificates 获取并缓存（默认关闭）
+      cert_auto_download: false
+      public_key_id: ${APP_PAYMENT_WECHAT_PUBLIC_KEY_ID:}
+      public_key: ${APP_PAYMENT_WECHAT_PUBLIC_KEY:}
+      connect_timeout: 5
+      read_timeout: 30
+  # <<</MODULE:payment>>>
+
+  # 服务间远程调用 FeignClient 装配参数（规范 §7 远程调用韧性：超时/重试/退避/熔断，
+  # 由框架 build_feign_client 读取装配；circuit_breaker 段缺失时不启用熔断）
+  feign:
+    timeout: 10.0
+    retries: 2
+    retry_delay_base: 0.5
+    retry_delay_max: 4.0
+    circuit_breaker:
+      minimum_number_of_calls: 5
+      window_size: 10
+      wait_duration_in_open_state: 30.0
+
+  # <<<COMPONENT:registry>>>
+  # 服务注册发现：nacos（微服务强制启用，禁止内存实现；docker-compose 提供）
+  registry:
+    type: nacos
+    nacos:
+      server_addresses: ${APP_REGISTRY_NACOS_SERVER:127.0.0.1:8848}
+      namespace: ${APP_REGISTRY_NACOS_NAMESPACE:public}
+      group: ${APP_REGISTRY_NACOS_GROUP:DEFAULT_GROUP}
+  # <<</COMPONENT:registry>>>

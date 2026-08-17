@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flower-microservices-scaffolding"
+version = "0.1.0"
+description = "基于 flower-web-infrastructure 的微服务脚手架（Monorepo：gateway + user-service + order-service）"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "花海" }]
+license = { text = "MIT" }
+keywords = ["web", "backend", "fastapi", "microservices", "scaffolding"]
+
+# =====================================================================
+# 框架依赖（flower-web-infrastructure）安装方式（默认远程拉取，不假设本机有框架仓库）：
+#   方式一（Git 依赖，默认）：在脚手架虚拟环境内执行
+#     pip install "flower-web-infrastructure[min-microservice] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git"
+#     （min-microservice = 核心 + MySQL/SQLite + Redis + Nacos + RocketMQ + MinIO，与本脚手架 docker-compose 外部依赖对齐；
+#     仅本地跑测试可精简为 [mysql,redis,migrate]，测试使用内存注册中心/MQ，不依赖 Nacos/RocketMQ/MinIO）
+#   方式二（本地开发，可选）：本机已 clone 框架仓库时，可用 editable 本地安装
+#     pip install -e "f:\baseProject\flower-web-infrastructure[min-microservice]"
+# 说明：各服务业务代码通过 `from web_infra import ...` 使用框架能力，框架为基础依赖，
+#       本文件（工作区根）不声明业务依赖；各服务依赖见 services/<service>/pyproject.toml。
+# =====================================================================
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "httpx>=0.27",
+    "pyright>=1.1.0",
+]
+
+# 根为工作区容器（非 Python 包）：声明无包，避免 setuptools flat-layout 误将 db/services 识别为包
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+# 根目录运行 pytest：三个服务包均加入 pythonpath，testpaths 覆盖全部服务测试
+pythonpath = [
+    "services/gateway/src",
+    "services/user-service/src",
+    "services/order-service/src",
+]
+testpaths = [
+    "tests",
+    "services/gateway/tests",
+    "services/user-service/tests",
+    "services/order-service/tests",
+]
+addopts = "-q --import-mode=importlib"
+asyncio_mode = "auto"
+# 注：--import-mode=importlib 按文件路径导入测试模块（pytest 8.1+ 的 ini 选项 import_mode 已在
+# pytest 9 移除，改用 CLI flag；多服务同名测试文件如 test_application.py 由此避免模块名冲突）
+
+[tool.pyright]
+# 静态类型检查：新增代码必须 0 错误（include 覆盖三个服务源码）
+pythonVersion = "3.10"
+pythonPlatform = "All"
+typeCheckingMode = "standard"
+include = [
+    "services/gateway/src",
+    "services/user-service/src",
+    "services/order-service/src",
+]
+venvPath = "."
+venv = ".venv"
+reportMissingTypeStubs = "none"
