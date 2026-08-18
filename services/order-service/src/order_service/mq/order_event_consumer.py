@@ -15,7 +15,7 @@ import logging
 from collections import deque
 from typing import Any
 
-from web_infra.mq import (
+from web_infra.capabilities.mq import (
     IdempotentConsumer,
     InMemoryMessageIdempotencyStore,
     Message,

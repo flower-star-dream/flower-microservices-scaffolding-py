@@ -13,7 +13,7 @@ from httpx import ASGITransport, AsyncClient
 
 from web_infra import BizException, CommonErrorCode
 from web_infra import create_app
-from web_infra.security import (
+from web_infra.capabilities.security import (
     DemoSocialPlatform,
     InMemorySocialBindingStore,
     SocialLoginService,

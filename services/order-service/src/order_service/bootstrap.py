@@ -14,9 +14,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from web_infra.config import Settings
-from web_infra.config.nacos_properties import NacosProperties
-from web_infra.registry import NacosRegistration, ServiceInstance
+from web_infra.infra.config import Settings
+from web_infra.capabilities.config.nacos_properties import NacosProperties
+from web_infra.capabilities.registry import NacosRegistration, ServiceInstance
 
 logger = logging.getLogger("bootstrap")
 

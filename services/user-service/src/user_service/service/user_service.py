@@ -10,7 +10,7 @@
 from typing import Any
 
 from web_infra import CommonErrorCode, PasswordEncoder, get_logger
-from web_infra.cache import CacheBackendInterface
+from web_infra.capabilities.cache import CacheBackendInterface
 
 from user_service.constants.user_constant import UserConstant
 from user_service.model.user_model import UserModel

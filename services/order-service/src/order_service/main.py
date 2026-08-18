@@ -17,17 +17,17 @@ from decimal import Decimal
 import uvicorn
 
 from web_infra import build_feign_client, create_app
-from web_infra.http.feign_client import FeignClient
-from web_infra.mq import MqConfig, MysqlOutboxStore, register_outbox_tasks
-from web_infra.mq.in_memory_message_queue import InMemoryMessageQueue
-from web_infra.schedule import TaskScheduler
+from web_infra.capabilities.http.feign_client import FeignClient
+from web_infra.capabilities.mq import MqConfig, MysqlOutboxStore, register_outbox_tasks
+from web_infra.capabilities.mq.in_memory_message_queue import InMemoryMessageQueue
+from web_infra.capabilities.schedule import TaskScheduler
 
 from order_service.api.v1.order_controller import router as order_router
 from order_service.bootstrap import deregister_service, register_service
 from order_service.client.user_client import UserClient
 from order_service.mq.order_event_consumer import OrderEventConsumer
 # <<<MODULE:payment>>>
-from web_infra.payment import (
+from web_infra.capabilities.payment import (
     InMemoryLimitCounterStore,
     InMemoryPaymentFlowStore,
     InMemoryPaymentGateway,
@@ -36,7 +36,7 @@ from web_infra.payment import (
     PaymentGatewayRegistry,
     PaymentRiskGuard,
 )
-from web_infra.payment.risk.payment_limit_config import LimitRule
+from web_infra.capabilities.payment.risk.payment_limit_config import LimitRule
 from order_service.api.v1.order_payment_controller import router as order_payment_router
 from order_service.mq.order_event_publisher import OrderEventPublisher
 from order_service.payment.order_payment_callback_handler import OrderPaymentCallbackHandler

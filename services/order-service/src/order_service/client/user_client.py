@@ -13,8 +13,8 @@
 from typing import Any
 
 from web_infra import CommonErrorCode
-from web_infra.constants import HttpStatusConstant
-from web_infra.http.feign_client import FeignClient
+from web_infra.infra.constants import HttpStatusConstant
+from web_infra.capabilities.http.feign_client import FeignClient
 
 
 class UserClient:

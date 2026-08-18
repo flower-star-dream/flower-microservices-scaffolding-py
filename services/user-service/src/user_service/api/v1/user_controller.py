@@ -10,7 +10,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 
 from web_infra import PageResult, Result
-from web_infra.db.page_query import PageQuery
+from web_infra.capabilities.db.page_query import PageQuery
 
 from user_service.repository.user_repository import UserRepository
 from user_service.schema.user_schema import UserCreateRequest, UserStatusUpdateRequest

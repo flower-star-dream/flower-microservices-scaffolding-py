@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from web_infra.mq import MysqlOutboxStore, OutboxRecord
+from web_infra.capabilities.mq import MysqlOutboxStore, OutboxRecord
 
 from order_service.constants.order_constant import OrderConstant
 from order_service.model.order_model import OrderModel

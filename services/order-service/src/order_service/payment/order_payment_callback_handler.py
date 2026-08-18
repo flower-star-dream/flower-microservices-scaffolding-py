@@ -11,8 +11,8 @@
 from __future__ import annotations
 
 from web_infra import BizException, get_logger
-from web_infra.payment import PaymentCallback, PaymentCallbackHandler
-from web_infra.state_machine import StateMachineErrorCode
+from web_infra.capabilities.payment import PaymentCallback, PaymentCallbackHandler
+from web_infra.capabilities.state_machine import StateMachineErrorCode
 
 from order_service.service.order_service import OrderService
 from order_service.state.order_state_machine import OrderEvent

@@ -13,8 +13,8 @@ from httpx import ASGITransport, AsyncClient
 
 from gateway.proxy_router import DEFAULT_ROUTES, router as gateway_router
 from web_infra import create_app
-from web_infra.http.feign_client import FeignClient
-from web_infra.registry import ServiceInstance
+from web_infra.capabilities.http.feign_client import FeignClient
+from web_infra.capabilities.registry import ServiceInstance
 
 
 def _upstream_handler(request: httpx.Request) -> httpx.Response:

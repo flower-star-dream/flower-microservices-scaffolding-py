@@ -13,9 +13,9 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from web_infra import BizException, CommonErrorCode, create_app
-from web_infra.cache import MemoryCacheBackend
-from web_infra.mq import InMemoryMessageQueue, MysqlOutboxStore
-from web_infra.payment import (
+from web_infra.capabilities.cache import MemoryCacheBackend
+from web_infra.capabilities.mq import InMemoryMessageQueue, MysqlOutboxStore
+from web_infra.capabilities.payment import (
     InMemoryLimitCounterStore,
     InMemoryPaymentFlowStore,
     InMemoryPaymentGateway,
@@ -26,7 +26,7 @@ from web_infra.payment import (
     PaymentGatewayRegistry,
     PaymentRiskGuard,
 )
-from web_infra.payment.risk.payment_limit_config import LimitRule
+from web_infra.capabilities.payment.risk.payment_limit_config import LimitRule
 
 from order_service.api.v1.order_controller import router as order_router
 from order_service.api.v1.order_payment_controller import router as payment_router

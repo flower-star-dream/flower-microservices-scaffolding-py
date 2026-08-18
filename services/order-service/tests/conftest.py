@@ -17,7 +17,7 @@ from sqlalchemy.pool import StaticPool
 import order_service.model  # noqa: F401
 from order_service.api.v1.order_controller import router as order_router
 from web_infra import create_app
-from web_infra.db import Base, MySQLDatabase
+from web_infra.capabilities.db import Base, MySQLDatabase
 
 _JWT_SECRET = "scaffolding-test-secret-0123456789"
 
@@ -88,7 +88,7 @@ async def app(db):
     application.state.db = db
     application.state.user_client = _FakeUserClient()
     # 装配 Outbox 存储（订单事件可靠投递，规范 §21.3；会话工厂复用 SQLite 内存库）
-    from web_infra.mq import MysqlOutboxStore
+    from web_infra.capabilities.mq import MysqlOutboxStore
 
     application.state.outbox_store = MysqlOutboxStore(lambda: db.session_factory())
     application.include_router(order_router)

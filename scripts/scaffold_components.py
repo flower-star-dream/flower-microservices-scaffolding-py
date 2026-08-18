@@ -337,8 +337,8 @@ from __future__ import annotations
 
 from typing import Any, AsyncContextManager
 
-from web_infra.db.database_factory_interface import DatabaseFactoryInterface
-from web_infra.db.database_session_interface import DatabaseSessionInterface
+from web_infra.capabilities.db.database_factory_interface import DatabaseFactoryInterface
+from web_infra.capabilities.db.database_session_interface import DatabaseSessionInterface
 
 
 class CustomDatabaseSession(DatabaseSessionInterface):
@@ -404,7 +404,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from web_infra.db.database_session_interface import DatabaseSessionInterface
+from web_infra.capabilities.db.database_session_interface import DatabaseSessionInterface
 
 
 class OrmCustomDatabaseSession(DatabaseSessionInterface):
@@ -443,7 +443,7 @@ class OrmCustomDatabaseSession(DatabaseSessionInterface):
         await self._session.close()
 
 
-# TODO(花海): 在装配处接入（参考框架实现 web_infra.db.sqlalchemy_database_session /
+# TODO(花海): 在装配处接入（参考框架实现 web_infra.capabilities.db.sqlalchemy_database_session /
 #   mysql_database / database_manager）：
 #   - 自定义会话工厂：async_sessionmaker(engine, ...) 包装为 OrmCustomDatabaseSession；
 #   - 多数据源 / 动态路由：实现 DatabaseRouterInterface 或复用框架 TenantDatabaseRouter，
@@ -460,7 +460,7 @@ class OrmCustomDatabaseSession(DatabaseSessionInterface):
 \"\"\"
 from typing import Any
 
-from web_infra.cache.cache_backend_interface import CacheBackendInterface
+from web_infra.capabilities.cache.cache_backend_interface import CacheBackendInterface
 
 
 class CustomCacheBackend(CacheBackendInterface):
@@ -499,7 +499,7 @@ class CustomCacheBackend(CacheBackendInterface):
               后在应用装配处注入替换默认 LocalObjectStorage
               （接口契约见框架文档 SPI-Extensions.md §12.1）。
 \"\"\"
-from web_infra.storage.object_storage_interface import ObjectStorageInterface
+from web_infra.capabilities.storage.object_storage_interface import ObjectStorageInterface
 
 
 class CustomObjectStorage(ObjectStorageInterface):
@@ -535,8 +535,8 @@ class CustomObjectStorage(ObjectStorageInterface):
               （MessageConsumerInterface / MessageIdempotencyStoreInterface / OutboxStoreInterface，
               契约见框架文档 SPI-Extensions.md §9）。
 \"\"\"
-from web_infra.mq.message import Message
-from web_infra.mq.message_publisher_interface import MessagePublisherInterface
+from web_infra.capabilities.mq.message import Message
+from web_infra.capabilities.mq.message_publisher_interface import MessagePublisherInterface
 
 
 class CustomMessagePublisher(MessagePublisherInterface):
@@ -559,8 +559,8 @@ class CustomMessagePublisher(MessagePublisherInterface):
               后在装配处注入替换框架默认（注意：注册中心不允许使用内存实现）
               （接口契约见框架文档 SPI-Extensions.md §5.1）。
 \"\"\"
-from web_infra.registry.service_instance import ServiceInstance
-from web_infra.registry.service_registry_interface import ServiceRegistryInterface
+from web_infra.capabilities.registry.service_instance import ServiceInstance
+from web_infra.capabilities.registry.service_registry_interface import ServiceRegistryInterface
 
 
 class CustomServiceRegistry(ServiceRegistryInterface):
@@ -591,7 +591,7 @@ class CustomServiceRegistry(ServiceRegistryInterface):
               接入自有配置中心（如 Apollo），替换默认本地复合配置源
               （接口契约见框架文档 SPI-Extensions.md §3.1）。
 \"\"\"
-from web_infra.config.config_client_interface import ConfigClientInterface
+from web_infra.capabilities.config.config_client_interface import ConfigClientInterface
 
 
 class CustomConfigClient(ConfigClientInterface):
@@ -620,13 +620,13 @@ class CustomConfigClient(ConfigClientInterface):
 \"\"\"
 from decimal import Decimal
 
-from web_infra.payment.payment_callback import PaymentCallback
-from web_infra.payment.payment_gateway_interface import PaymentGateway
-from web_infra.payment.prepay_request import PaymentPrepayRequest
-from web_infra.payment.prepay_response import PaymentPrepayResponse
-from web_infra.payment.refund_request import PaymentRefundRequest
-from web_infra.payment.refund_response import PaymentRefundResponse
-from web_infra.payment.payment_order import PaymentOrder
+from web_infra.capabilities.payment.payment_callback import PaymentCallback
+from web_infra.capabilities.payment.payment_gateway_interface import PaymentGateway
+from web_infra.capabilities.payment.prepay_request import PaymentPrepayRequest
+from web_infra.capabilities.payment.prepay_response import PaymentPrepayResponse
+from web_infra.capabilities.payment.refund_request import PaymentRefundRequest
+from web_infra.capabilities.payment.refund_response import PaymentRefundResponse
+from web_infra.capabilities.payment.payment_order import PaymentOrder
 
 
 class CustomPaymentGateway(PaymentGateway):
@@ -662,9 +662,9 @@ class CustomPaymentGateway(PaymentGateway):
               SPI-Extensions.md §7.1；更多 AI SPI：ModelConfigStoreInterface /
               ContentGuardInterface / QuotaStoreInterface 等）。
 \"\"\"
-from web_infra.ai.chat_request import ChatRequest
-from web_infra.ai.chat_response import ChatResponse
-from web_infra.ai.model_provider_interface import ModelProviderInterface
+from web_infra.capabilities.ai.chat_request import ChatRequest
+from web_infra.capabilities.ai.chat_response import ChatResponse
+from web_infra.capabilities.ai.model_provider_interface import ModelProviderInterface
 
 
 class CustomModelProvider(ModelProviderInterface):
@@ -685,7 +685,7 @@ class CustomModelProvider(ModelProviderInterface):
               注入验证码服务替换默认 InMemoryCaptchaStore
               （接口契约见框架文档 SPI-Extensions.md §11.1）。
 \"\"\"
-from web_infra.security.captcha_store_interface import CaptchaStoreInterface
+from web_infra.capabilities.security.captcha_store_interface import CaptchaStoreInterface
 
 
 class CustomCaptchaStore(CaptchaStoreInterface):
@@ -708,7 +708,7 @@ class CustomCaptchaStore(CaptchaStoreInterface):
               经 JWTUtil.configure(token_store=..., key_provider=...) 注入，优先级最高
               （接口契约见框架文档 SPI-Extensions.md §11.4 / §11.5）。
 \"\"\"
-from web_infra.security.jwt_token_store_interface import JwtTokenStore
+from web_infra.capabilities.security.jwt_token_store_interface import JwtTokenStore
 
 
 class CustomJwtTokenStore(JwtTokenStore):
@@ -740,8 +740,8 @@ class CustomJwtTokenStore(JwtTokenStore):
               可另行实现 SocialBindingStore 的 Redis/DB 版（契约见框架文档
               SPI-Extensions.md §11.2 / §11.3）。
 \"\"\"
-from web_infra.security.social.social_platform_interface import SocialPlatform
-from web_infra.security.social.social_user_info import SocialUserInfo
+from web_infra.capabilities.security.social.social_platform_interface import SocialPlatform
+from web_infra.capabilities.security.social.social_user_info import SocialUserInfo
 
 
 class CustomSocialPlatform(SocialPlatform):
@@ -770,8 +770,8 @@ class CustomSocialPlatform(SocialPlatform):
               注入任务执行器替换默认 InMemoryTaskRecordStore（更新采用乐观锁）
               （接口契约见框架文档 SPI-Extensions.md §13.1）。
 \"\"\"
-from web_infra.task.task_record import TaskRecord
-from web_infra.task.task_record_store import TaskRecordStoreInterface
+from web_infra.capabilities.task.task_record import TaskRecord
+from web_infra.capabilities.task.task_record_store import TaskRecordStoreInterface
 
 
 class CustomTaskRecordStore(TaskRecordStoreInterface):
@@ -802,7 +802,7 @@ class CustomTaskRecordStore(TaskRecordStoreInterface):
               注入幂等中间件替换默认 InMemoryIdempotencyStore
               （接口契约见框架文档 SPI-Extensions.md §14.1）。
 \"\"\"
-from web_infra.web.idempotency_store_interface import IdempotencyResult, IdempotencyStoreInterface
+from web_infra.infra.web.idempotency_store_interface import IdempotencyResult, IdempotencyStoreInterface
 
 
 class CustomIdempotencyStore(IdempotencyStoreInterface):

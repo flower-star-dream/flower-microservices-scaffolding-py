@@ -11,9 +11,9 @@ from decimal import Decimal
 import pytest
 
 from web_infra import BizException, CommonErrorCode
-from web_infra.cache import MemoryCacheBackend
-from web_infra.mq import InMemoryMessageQueue, MysqlOutboxStore
-from web_infra.state_machine import StateMachineErrorCode, StateMachineRegistry
+from web_infra.capabilities.cache import MemoryCacheBackend
+from web_infra.capabilities.mq import InMemoryMessageQueue, MysqlOutboxStore
+from web_infra.capabilities.state_machine import StateMachineErrorCode, StateMachineRegistry
 
 from order_service.mq.order_event_publisher import OrderEventPublisher
 from order_service.repository.order_repository import OrderRepository

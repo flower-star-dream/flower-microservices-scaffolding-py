@@ -12,8 +12,8 @@
 import uvicorn
 
 from web_infra import build_feign_client, create_app
-from web_infra.config import Settings
-from web_infra.http.feign_client import FeignClient
+from web_infra.infra.config import Settings
+from web_infra.capabilities.http.feign_client import FeignClient
 
 from gateway.bootstrap import deregister_service, register_service
 from gateway.proxy_router import DEFAULT_ROUTES, router as gateway_router

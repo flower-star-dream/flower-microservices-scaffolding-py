@@ -20,7 +20,7 @@ from enum import Enum, IntEnum
 from typing import Callable, cast
 
 from web_infra import CommonErrorCode
-from web_infra.state_machine import (
+from web_infra.capabilities.state_machine import (
     StateMachine,
     StateMachineErrorCode,
     StateMachineRegistry,

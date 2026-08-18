@@ -11,7 +11,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from web_infra import CommonErrorCode, Result
-from web_infra.payment import (
+from web_infra.capabilities.payment import (
     InMemoryPaymentGateway,
     PaymentCallback,
     PaymentCallbackDispatcher,

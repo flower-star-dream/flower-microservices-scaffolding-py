@@ -13,9 +13,9 @@ from datetime import datetime
 from typing import Any
 
 from web_infra import CommonErrorCode, get_logger
-from web_infra.cache import CacheBackendInterface
-from web_infra.state_machine import StateRouteParams
-from web_infra.utils import snowflake_id
+from web_infra.capabilities.cache import CacheBackendInterface
+from web_infra.capabilities.state_machine import StateRouteParams
+from web_infra.infra.utils import snowflake_id
 
 from order_service.client.user_client import UserClient
 from order_service.constants.order_constant import OrderConstant

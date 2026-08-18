@@ -14,7 +14,7 @@ from __future__ import annotations
 import secrets
 
 from web_infra import CommonErrorCode, JWTUtil, PasswordEncoder
-from web_infra.security import SocialBindingStore, SocialLoginService, SocialUserInfo
+from web_infra.capabilities.security import SocialBindingStore, SocialLoginService, SocialUserInfo
 
 from user_service.constants.user_constant import UserConstant
 from user_service.model.user_model import UserModel

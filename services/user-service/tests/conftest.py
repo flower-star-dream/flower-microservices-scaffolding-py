@@ -17,8 +17,8 @@ from sqlalchemy.pool import StaticPool
 import user_service.model  # noqa: F401
 from user_service.api.v1.user_controller import router as user_router
 from web_infra import create_app
-from web_infra.db import Base, MySQLDatabase
-from web_infra.security import JWTUtil
+from web_infra.capabilities.db import Base, MySQLDatabase
+from web_infra.capabilities.security import JWTUtil
 
 _JWT_SECRET = "scaffolding-test-secret-0123456789"
 

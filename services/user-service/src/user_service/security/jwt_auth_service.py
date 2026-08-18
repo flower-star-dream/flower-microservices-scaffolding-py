@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 from web_infra import CommonErrorCode, PasswordEncoder, TokenVerifyStatus
-from web_infra.security import EnvJwtKeyProvider, InMemoryJwtTokenStore, JWTUtil, JwtKeyProvider, JwtTokenStore
+from web_infra.capabilities.security import EnvJwtKeyProvider, InMemoryJwtTokenStore, JWTUtil, JwtKeyProvider, JwtTokenStore
 
 from user_service.constants.user_constant import UserConstant
 from user_service.repository.user_repository import UserRepository

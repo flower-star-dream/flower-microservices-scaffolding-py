@@ -14,12 +14,12 @@ import httpx
 import pytest
 
 from web_infra import BizException, CommonErrorCode
-from web_infra.cache import MemoryCacheBackend
-from web_infra.http.feign_client import FeignClient
-from web_infra.mq import InMemoryMessageIdempotencyStore, Message
-from web_infra.mq.in_memory_message_queue import InMemoryMessageQueue
-from web_infra.registry import InMemoryServiceRegistry, ServiceInstance
-from web_infra.resilience import CircuitBreakerConfig
+from web_infra.capabilities.cache import MemoryCacheBackend
+from web_infra.capabilities.http.feign_client import FeignClient
+from web_infra.capabilities.mq import InMemoryMessageIdempotencyStore, Message
+from web_infra.capabilities.mq.in_memory_message_queue import InMemoryMessageQueue
+from web_infra.capabilities.registry import InMemoryServiceRegistry, ServiceInstance
+from web_infra.infra.resilience import CircuitBreakerConfig
 
 from order_service.api.v1.order_controller import router as order_router
 from order_service.client.user_client import UserClient
@@ -46,7 +46,7 @@ class _FakeUserClient:
 def _build_service(db, users: dict[int, dict] | None = None) -> tuple[OrderService, InMemoryMessageQueue, Any]:
     """构造订单服务（注入 SQLite 内存库 + 假用户客户端 + 内存消息队列 + Outbox 存储 + 内存缓存）"""
     mq = InMemoryMessageQueue()
-    from web_infra.mq import MysqlOutboxStore
+    from web_infra.capabilities.mq import MysqlOutboxStore
 
     outbox_store = MysqlOutboxStore(lambda: db.session_factory())
     service = OrderService(
@@ -90,7 +90,7 @@ async def test_create_order_success(db):
     assert pending[0].biz_id == str(vo.id)
     assert pending[0].topic == OrderConstant.ORDER_EVENT_TOPIC
     # 轮询投递后消息进入 MQ（OutboxPublisher 兜底，规范 §21.3）
-    from web_infra.mq import OutboxPublisher
+    from web_infra.capabilities.mq import OutboxPublisher
 
     outbox = OutboxPublisher(outbox_store, mq)
     assert await outbox.publish_pending() == 1
@@ -202,7 +202,7 @@ async def test_order_event_consumer_idempotent(db):
 @pytest.mark.asyncio
 async def test_outbox_publish_consumed_idempotently(db):
     """全链路兜底：创建订单 → Outbox 同事务落库 → 轮询投递 MQ → 幂等消费（不重复处理）"""
-    from web_infra.mq import OutboxPublisher
+    from web_infra.capabilities.mq import OutboxPublisher
 
     service, mq, outbox_store = _build_service(db)
     consumer = OrderEventConsumer(mq, InMemoryMessageIdempotencyStore())
@@ -326,9 +326,9 @@ async def test_create_order_api_idempotent(db):
     from httpx import ASGITransport, AsyncClient
 
     from web_infra import create_app
-    from web_infra.mq import MysqlOutboxStore
-    from web_infra.web.idempotency_middleware import IdempotencyMiddleware
-    from web_infra.web.in_memory_idempotency_store import InMemoryIdempotencyStore
+    from web_infra.capabilities.mq import MysqlOutboxStore
+    from web_infra.infra.web.idempotency_middleware import IdempotencyMiddleware
+    from web_infra.infra.web.in_memory_idempotency_store import InMemoryIdempotencyStore
 
     application = create_app({"app.name": "order-service-test"})
     application.state.db = db

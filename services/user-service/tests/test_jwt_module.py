@@ -12,8 +12,8 @@ from httpx import ASGITransport, AsyncClient
 
 from web_infra import BizException, CommonErrorCode
 from web_infra import create_app
-from web_infra.cache import MemoryCacheBackend
-from web_infra.security import InMemoryJwtTokenStore
+from web_infra.capabilities.cache import MemoryCacheBackend
+from web_infra.capabilities.security import InMemoryJwtTokenStore
 
 from user_service.api.v1.auth_controller import router as auth_router
 from user_service.api.v1.user_controller import router as user_router

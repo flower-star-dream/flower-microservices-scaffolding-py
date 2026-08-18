@@ -10,7 +10,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 
 from web_infra import PageResult, Result
-from web_infra.db.page_query import PageQuery
+from web_infra.capabilities.db.page_query import PageQuery
 
 from order_service.mq.order_event_publisher import OrderEventPublisher
 from order_service.repository.order_repository import OrderRepository

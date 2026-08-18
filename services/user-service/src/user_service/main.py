@@ -12,7 +12,7 @@
 import uvicorn
 
 from web_infra import create_app
-from web_infra.security import InMemoryJwtTokenStore, JWTUtil, SocialLoginService, SocialPlatformRegistry, DemoSocialPlatform, InMemorySocialBindingStore
+from web_infra.capabilities.security import InMemoryJwtTokenStore, JWTUtil, SocialLoginService, SocialPlatformRegistry, DemoSocialPlatform, InMemorySocialBindingStore
 
 from user_service.api.v1.user_controller import router as user_router
 # <<<MODULE:jwt_spi>>>

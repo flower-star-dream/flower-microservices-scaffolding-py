@@ -29,8 +29,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from web_infra.config.config_utils import load_env_file  # noqa: E402  (需在 sys.path 调整后导入)
-from web_infra.db.mysql_base import Base  # noqa: E402  (需在 sys.path 调整后导入)
+from web_infra.infra.config.config_utils import load_env_file  # noqa: E402  (需在 sys.path 调整后导入)
+from web_infra.capabilities.db.mysql_base import Base  # noqa: E402  (需在 sys.path 调整后导入)
 
 # 业务模型注册到 Base.metadata（autogenerate 对比依据）；新增业务模型后需在此处导入
 import user_service.model  # noqa: E402, F401
@@ -47,7 +47,7 @@ def _resolve_url() -> str:
     """解析迁移数据库 URL：进程/容器环境变量 USER_DATABASE_URL > 通用 DATABASE_URL
     > 仓库根 .env（自动加载）> alembic.ini 的 sqlalchemy.url。
 
-    复用框架配置加载能力（web_infra.config.config_utils.load_env_file，与应用启动时
+    复用框架配置加载能力（web_infra.infra.config.config_utils.load_env_file，与应用启动时
     Settings.default_source() 的 .env 加载行为一致，幂等且不覆盖已存在的环境变量）。
     """
     load_env_file()

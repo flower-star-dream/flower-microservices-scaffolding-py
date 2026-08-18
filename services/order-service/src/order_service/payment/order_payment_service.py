@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import Any
 
 from web_infra import CommonErrorCode
-from web_infra.payment import (
+from web_infra.capabilities.payment import (
     PaymentGateway,
     PaymentOrder,
     PaymentPrepayRequest,
@@ -26,7 +26,7 @@ from web_infra.payment import (
     PaymentRiskGuard,
     PaymentScene,
 )
-from web_infra.payment.risk.payment_limit_config import LimitRule
+from web_infra.capabilities.payment.risk.payment_limit_config import LimitRule
 
 from order_service.repository.order_repository import OrderRepository
 
