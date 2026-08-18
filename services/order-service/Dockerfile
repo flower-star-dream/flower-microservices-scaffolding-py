@@ -6,7 +6,7 @@
 #               min-monolith + migrate extras，故 build 阶段安装
 #               flower-web-infrastructure[min-microservice,migrate] 后仅拷贝 site-packages 到 runtime。
 #               构建前置：build 阶段安装 git（pip 以 git+https 拉取框架源码需要）
-#               + 可访问框架仓库（默认 git+https://github.com/flower-star-dream/flower-web-infrastructure.git）。
+#               + 可访问框架仓库（锁定正式版本 v1.0.0：git+https://github.com/flower-star-dream/flower-web-infrastructure.git@v1.0.0）。
 #               2026-08-17 整改（Trivy 高危阻断）：runtime apt upgrade 修复基础镜像 util-linux 家族
 #               CVE-2026-53615；build 覆盖升级 cryptography>=50.0.0 修复 CVE-2026-69247/CVE-2026-69249。
 # =====================================================================
@@ -24,7 +24,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \
-    pip install "flower-web-infrastructure[min-microservice,migrate] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git" && \
+    pip install "flower-web-infrastructure[min-microservice,migrate] @ git+https://github.com/flower-star-dream/flower-web-infrastructure.git@v1.0.0" && \
     # 覆盖升级 cryptography（Trivy 高危修复）：nacos 传递依赖 alibabacloud-tea-openapi 将 cryptography
     # 上限锁在 <49（48.0.1 命中 CVE-2026-69247/CVE-2026-69249，修复版 50.0.0），框架核心无上限故安装后显式升级
     pip install --upgrade "cryptography>=50.0.0" && \

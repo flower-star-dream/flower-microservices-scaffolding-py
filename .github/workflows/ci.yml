@@ -45,11 +45,12 @@ jobs:
       - name: 检出脚手架
         uses: actions/checkout@v4
 
-      - name: 检出框架仓库（本地 editable 依赖方式）
+      - name: 检出框架仓库（本地 editable 依赖方式，锁定框架正式版本 v1.0.0）
         uses: actions/checkout@v4
         with:
           repository: flower-star-dream/flower-web-infrastructure
           path: flower-web-infrastructure
+          ref: v1.0.0
           # 框架仓库为私有时需配置 PAT（Secrets.FRAMEWORK_PAT，contents:read）并取消下方注释；
           # 仓库公开时无需 token
           # token: ${{ secrets.FRAMEWORK_PAT }}
