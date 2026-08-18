@@ -26,7 +26,7 @@ app:
         enabled: true            # 安全响应头（推荐启用）
       auth:
         enabled: false           # 统一鉴权中间件，需使用时改为 true 并配置签发密钥 JWT_SECRET_KEY
-        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/docs", "/redoc", "/openapi.json"]
+        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/capacity", "/docs", "/redoc", "/openapi.json"]
       idempotency:               # API 幂等键中间件（订单创建防重复下单，规范 §12.6）
         ttl_seconds: 86400       #   幂等结果保留 24h（覆盖重试窗口）；多实例需配 Redis 共享存储
       trace_id: {}

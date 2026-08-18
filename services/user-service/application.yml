@@ -29,7 +29,7 @@ app:
         enabled: true            # 安全响应头（推荐启用）
       auth:
         enabled: false           # 统一鉴权中间件，需使用时改为 true 并配置签发密钥 JWT_SECRET_KEY
-        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/docs", "/redoc", "/openapi.json"]
+        whitelist: ["/health", "/health/live", "/health/ready", "/metrics", "/capacity", "/docs", "/redoc", "/openapi.json"]
       trace_id: {}
 
   # <<<MODULE:jwt_spi>>>
